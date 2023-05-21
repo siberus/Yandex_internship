@@ -4,7 +4,8 @@
 #include <array>
 
 using namespace std;
-int g_time = 0;
+//int g_time = 0;
+int g_passengersOnPlace = 0;
 
 struct Passenger 
 {
@@ -15,7 +16,6 @@ struct Passenger
     int time {0};
     bool inPlace {false};
 };
-
 
 array<string, 30> g_seats{""};
 
@@ -104,6 +104,8 @@ void seatDown(Passenger p_passenger)
     {
         p_passenger.inPlace = true;
         g_seats[p_passenger.row-1].push_back(p_passenger.seat);
+        g_passengersOnPlace++;
+
     }
     else
     {
@@ -124,7 +126,8 @@ void nextStep(vector<Passenger>  p_passengers)
     {
         
         int index = distance(p_passengers.begin(), it);
-        int maxAvailableRow = 1;
+        int maxAvailableRow;
+        int nextPassenger;
 
         if (!p_passengers[index].inPlace)
         {
@@ -136,41 +139,32 @@ void nextStep(vector<Passenger>  p_passengers)
            //Если второй и последующие проверяем как далеко могут продвинутся
            else
            {
-                //Определяем максимальный ряд, путь до которого свободен
+                maxAvailableRow = p_passengers[index-1].row;
+                nextPassenger = index-1;
+                //Определяем максимальный ряд, путь до которого свободен и номер пассажира впереди
                 for (int i = index-1; i <= 0; i--)
                 {
                     if(p_passengers[i].inPlace)
+                    {
                         maxAvailableRow = p_passengers[i].row;
+                        nextPassenger = i+1;
+                    }
                 }
                 //Если путь свободен до нужноо ряда, то начинаем усаживать
                 if (maxAvailableRow <= p_passengers[index].row)
                 {
                     seatDown(p_passengers[index]);
                 }
-                //Если путь не свободен до нужноо ряда, то продвигаемся вперед и ждем
+                //Если путь не свободен до нужного ряда, то продвигаемся вперед и ждем
                 else
                 {
-                    
-                }
-                
+                    p_passengers[index].currentRow = maxAvailableRow - 1;
+                    p_passengers[index].time = p_passengers[nextPassenger-1].time;
 
-                /* if((p_passengers[i].inPlace) || (p_passengers[index].row <= p_passengers[i].row))
-                {
-                    //Сделать void seatDown(Passenger p_passenger) на основе строк:
-                    p_passengers[index].currentRow = p_passengers[index].row;
-                    p_passengers[index].time += (1+p_passengers[index].a);
-                    p_passengers[index].inPlace = true;
-                    break;
-                } */
-                
-            
-            
+                }
            }
-           
         }
-        
     }
-    
     return;
 }
 
@@ -191,7 +185,19 @@ int main()
         initialPassengers(passengers, a, row, seat);
     }
     //printPassenger(passengers);
-
+    while (g_passengersOnPlace < numberOfPassengers)
+    {
+        nextStep(passengers);
+    }
+    int totalTime{0};
+    for (const auto &p: passengers)
+    {   
+        if (p.time > totalTime)
+        {
+            totalTime = p.time;
+        }
+    }
+    cout << totalTime;  
 
 
     return 0;
